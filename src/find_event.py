@@ -101,6 +101,9 @@ def read_dat(filename):
         msg = '*** Out-of-date DAT file format detected in {}.  Rerun doppler search!' \
               .format(filename)
         raise RuntimeError(msg) from exc
+    
+    # Check for BlkSK, SK, Max/Min being present (cols 12, 13, 14)
+    BlkSK_present = hits[7].find('BlkSK')>=0
 
     # Get info from individual hits (the body of the .dat file)
     all_hits = []
@@ -120,7 +123,16 @@ def read_dat(filename):
         FreqEnd = list(zip(*all_hits))[7]
         CoarseChanNum = list(zip(*all_hits))[10]
         FullNumHitsInRange = list(zip(*all_hits))[11]
-
+        n_hit_rows = len(TopHitNum)
+        if (BlkSK_present):
+            BlkSK = list(zip(*all_hits))[12]
+            SK = list(zip(*all_hits))[13]
+            max_min_ratio = list(zip(*all_hits))[14]
+        else:
+            BlkSK = -np.ones(n_hit_rows)
+            SK = -np.ones(n_hit_rows)
+            max_min_ratio = -np.ones(n_hit_rows)
+        
         data = {'TopHitNum': TopHitNum,
                 'DriftRate': DriftRate,
                 'SNR': SNR,
@@ -129,7 +141,10 @@ def read_dat(filename):
                 'FreqStart': FreqStart,
                 'FreqEnd': FreqEnd,
                 'CoarseChanNum': CoarseChanNum,
-                'FullNumHitsInRange': FullNumHitsInRange
+                'FullNumHitsInRange': FullNumHitsInRange,
+                'BlkSK': BlkSK,
+                'SK': SK,
+                'MaxMinRatio': max_min_ratio
                 }
 
         # Creating pandas dataframe from data we just read in
